@@ -4,7 +4,7 @@ A simple macOS Bookmarks parser (and library) written in Rust!
 macOS Bookmarks are a form of shortcuts on a macOS system
 
 # Use Case
-There are several macOS applications and features that make sure of Bookmarks. Two major ones are:
+There are several macOS applications and features that make sure of Bookmarks. Two interesting ones are:
 + macOS LoginItems. LoginItems are a form of persistence on a macOS system
 + Safari downloads. Downloaded files in Safari are tracked in a plist file called `Downloads.plist` this plist file actually contains Bookmark data
 
