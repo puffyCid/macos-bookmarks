@@ -18,5 +18,5 @@ Bookmarks contain a variety of intersting data such as:
 
 
 # References
-http://michaellynn.github.io/2015/10/24/apples-bookmarkdata-exposed/
+http://michaellynn.github.io/2015/10/24/apples-bookmarkdata-exposed/  
 https://mac-alias.readthedocs.io/en/latest/bookmark_fmt.html
