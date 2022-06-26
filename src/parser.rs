@@ -1,4 +1,4 @@
-use log::warn;
+use log::{error, info};
 
 use crate::{bookmark::BookmarkData, error::BookmarkError};
 
@@ -6,7 +6,7 @@ use crate::{bookmark::BookmarkData, error::BookmarkError};
 pub fn parse_bookmark(data: &[u8]) -> Result<BookmarkData, BookmarkError> {
     let header_size = 48;
     if data.len() < header_size {
-        warn!("Data size less than bookmark header size");
+        error!("Data size less than bookmark header size");
         return Err(BookmarkError::BadHeader);
     }
 
@@ -15,7 +15,7 @@ pub fn parse_bookmark(data: &[u8]) -> Result<BookmarkData, BookmarkError> {
     let (bookmark_data, header) = match header_results {
         Ok((bookmark_data, header)) => (bookmark_data, header),
         Err(err) => {
-            warn!("failed to get bookmark header: {:?}", err);
+            error!("failed to get bookmark header: {:?}", err);
             return Err(BookmarkError::BadHeader);
         }
     };
@@ -24,12 +24,12 @@ pub fn parse_bookmark(data: &[u8]) -> Result<BookmarkData, BookmarkError> {
 
     // Check for bookmark signature and expected offset
     if header.signature != book_sig || header.bookmark_data_offset != book_data_offset {
-        warn!("Data is not a bookmark got incorrect signature and offset");
-        warn!(
+        error!("Data is not a bookmark got incorrect signature and offset");
+        info!(
             "Expected signature: {}, got: {}.",
             book_sig, header.signature
         );
-        warn!(
+        info!(
             "Expected offset: {}, got: {}.",
             book_data_offset, header.bookmark_data_offset
         );
@@ -40,7 +40,7 @@ pub fn parse_bookmark(data: &[u8]) -> Result<BookmarkData, BookmarkError> {
     match data_results {
         Ok((_, bookmark_results)) => Ok(bookmark_results),
         Err(err) => {
-            warn!("failed to get bookmark data: {:?}", err);
+            error!("failed to get bookmark data: {:?}", err.to_string());
             Err(BookmarkError::BadBookmarkData)
         }
     }
