@@ -1,7 +1,7 @@
 # macos-bookmarks
 
 A simple macOS Bookmarks parser (and library) written in Rust!  
-macOS Bookmarks are a form of shortcuts on a macOS system
+macOS Bookmarks are kind of like a form of shortcuts on a macOS system
 
 # Use Case
 There are several macOS applications and features that make sure of Bookmarks. Two interesting ones are:

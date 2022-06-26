@@ -37,6 +37,7 @@ pub struct BookmarkData {
     pub folder_index: i64,          // Folder index number
     pub uid: i32,                   // User UID
     pub creation_options: i32,      // Bookmark creation options
+    pub is_executable: bool,        // Is binary excutable
 }
 
 #[derive(Debug)]
@@ -93,7 +94,7 @@ impl BookmarkData {
     const _NUMBER_FLOAT: u32 = 0x0305;
     const _NUMBERBER_FLOAT64: u32 = 0x0306;
     const DATE: u32 = 0x0400;
-    const _BOOL_FALSE: u32 = 0x0500;
+    const BOOL_FALSE: u32 = 0x0500;
     const BOOL_TRUE: u32 = 0x0501;
     const ARRAY_TYPE: u32 = 0x0601;
     const _DICTIONARY: u32 = 0x0701;
@@ -136,6 +137,7 @@ impl BookmarkData {
     const _UNKNOWN9: u32 = 0xf022;
     const SECURITY_EXTENSION: u32 = 0xf080;
     const _UNKNOWN10: u32 = 0xf081;
+    const IS_EXECUTABLE: u32 = 0xf000f;
 
     /// Parse bookmark header
     pub fn parse_bookmark_header(data: &[u8]) -> nom::IResult<&[u8], BookmarkHeader> {
@@ -208,6 +210,7 @@ impl BookmarkData {
             uid: 0,
             creation_options: 0,
             folder_index: 0,
+            is_executable: false,
         };
 
         for record in toc_content_data_record {
@@ -317,6 +320,18 @@ impl BookmarkData {
                     && standard_data.data_type == BookmarkData::BOOL_TRUE
                 {
                     bookmark_data.volume_root = true;
+                } else if standard_data.record_type == BookmarkData::VOLUME_ROOT
+                    && standard_data.data_type == BookmarkData::BOOL_FALSE
+                {
+                    bookmark_data.volume_root = false;
+                } else if standard_data.record_type == BookmarkData::IS_EXECUTABLE
+                    && standard_data.data_type == BookmarkData::BOOL_TRUE
+                {
+                    bookmark_data.is_executable = true;
+                } else if standard_data.record_type == BookmarkData::IS_EXECUTABLE
+                    && standard_data.data_type == BookmarkData::BOOL_FALSE
+                {
+                    bookmark_data.is_executable = false;
                 } else if standard_data.record_type == BookmarkData::LOCALIZED_NAME
                     && standard_data.data_type == BookmarkData::STRING_TYPE
                 {

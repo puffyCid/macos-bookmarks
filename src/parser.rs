@@ -40,7 +40,7 @@ pub fn parse_bookmark(data: &[u8]) -> Result<BookmarkData, BookmarkError> {
     match data_results {
         Ok((_, bookmark_results)) => Ok(bookmark_results),
         Err(err) => {
-            error!("failed to get bookmark data: {:?}", err.to_string());
+            error!("failed to get bookmark data: {:?}", err);
             Err(BookmarkError::BadBookmarkData)
         }
     }

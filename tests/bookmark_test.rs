@@ -29,6 +29,7 @@ fn test_loginitems_file() {
     let uid = 0;
     let username = String::new();
     let creation_options = 0;
+    let is_executable = false;
 
     assert_eq!(bookmark_data.creation, creation);
     assert_eq!(bookmark_data.path, path);
@@ -48,6 +49,7 @@ fn test_loginitems_file() {
     assert_eq!(bookmark_data.uid, uid);
     assert_eq!(bookmark_data.username, username);
     assert_eq!(bookmark_data.creation_options, creation_options);
+    assert_eq!(bookmark_data.is_executable, is_executable);
 }
 
 #[test]
