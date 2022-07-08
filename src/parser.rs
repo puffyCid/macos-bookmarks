@@ -129,5 +129,7 @@ fn test_parse_bookmark() {
     assert_eq!(bookmark.folder_index, folder_index);
     assert_eq!(bookmark.uid, uid);
     assert_eq!(bookmark.creation_options, creation_options);
-    assert_eq!(bookmark.security_extension, security_extension);
+    assert_eq!(bookmark.security_extension_rw, security_extension);
+    assert_eq!(bookmark.security_extension_ro, security_extension);
+    assert_eq!(bookmark.file_ref_flag, false);
 }

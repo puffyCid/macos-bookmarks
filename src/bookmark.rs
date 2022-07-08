@@ -1,3 +1,7 @@
+//! Parse macOS Bookmark data
+//!
+//! Provides a library to parse Bookmark data.
+
 use std::{
     fmt::Debug,
     mem::size_of,
@@ -7,10 +11,7 @@ use std::{
 use log::{debug, warn};
 use nom::{
     bytes::complete::take,
-    number::{
-        complete::{be_f64, be_u32, le_i64, le_u16, le_u32, le_u64},
-        streaming::le_i32,
-    },
+    number::complete::{be_f64, be_u32, le_i32, le_i64, le_u16, le_u32, le_u64},
 };
 use serde::Serialize;
 
@@ -19,25 +20,27 @@ use serde::Serialize;
 // http://michaellynn.github.io/2015/10/24/apples-bookmarkdata-exposed/
 #[derive(Debug, Serialize)]
 pub struct BookmarkData {
-    pub path: Vec<String>,          // Path to binary to run
-    pub cnid_path: Vec<i64>,        // Path represented as Catalog Node ID
-    pub creation: f64,              // Created timestamp of binary target
-    pub volume_path: String,        // Root
-    pub volume_url: String,         // URL type
-    pub volume_name: String,        // Name of Volume
-    pub volume_uuid: String,        // Volume UUID string
-    pub volume_size: i64,           // Size of Volume
-    pub volume_creation: f64,       // Created timestamp of Volume
-    pub volume_flag: Vec<u64>,      // Volume Property flags
-    pub volume_root: bool,          // If Volume is filesystem root
-    pub localized_name: String,     // Optional localized name of target binary
-    pub security_extension: String, // Optional Security extension of target binary
-    pub target_flags: Vec<u64>,     // Resource property flags
-    pub username: String,           // Username related to bookmark
-    pub folder_index: i64,          // Folder index number
-    pub uid: i32,                   // User UID
-    pub creation_options: i32,      // Bookmark creation options
-    pub is_executable: bool,        // Is binary excutable
+    pub path: Vec<String>,             // Path to binary to run
+    pub cnid_path: Vec<i64>,           // Path represented as Catalog Node ID
+    pub creation: f64,                 // Created timestamp of binary target
+    pub volume_path: String,           // Root
+    pub volume_url: String,            // URL type
+    pub volume_name: String,           // Name of Volume
+    pub volume_uuid: String,           // Volume UUID string
+    pub volume_size: i64,              // Size of Volume
+    pub volume_creation: f64,          // Created timestamp of Volume
+    pub volume_flag: Vec<u64>,         // Volume Property flags
+    pub volume_root: bool,             // If Volume is filesystem root
+    pub localized_name: String,        // Optional localized name of target binary
+    pub security_extension_rw: String, // Optional RW Security extension of target binary
+    pub security_extension_ro: String, // Optional RO Security extension of target binary
+    pub target_flags: Vec<u64>,        // Resource property flags
+    pub username: String,              // Username related to bookmark
+    pub folder_index: i64,             // Folder index number
+    pub uid: i32,                      // User UID
+    pub creation_options: i32,         // Bookmark creation options
+    pub is_executable: bool,           // Is binary excutable
+    pub file_ref_flag: bool,           // Has a file reference flag
 }
 
 #[derive(Debug)]
@@ -130,13 +133,13 @@ impl BookmarkData {
     const CONTAIN_FOLDER_INDEX: u32 = 0xc001;
     const CREATOR_USERNAME: u32 = 0xc011;
     const CREATOR_UID: u32 = 0xc012;
-    const _FILE_REF_FLAG: u32 = 0xd001;
+    const FILE_REF_FLAG: u32 = 0xd001;
     const CREATION_OPTIONS: u32 = 0xd010;
     const _URL_LENGTH_ARRAY: u32 = 0xe003;
     const LOCALIZED_NAME: u32 = 0xf017;
     const _UNKNOWN9: u32 = 0xf022;
-    const SECURITY_EXTENSION: u32 = 0xf080;
-    const _UNKNOWN10: u32 = 0xf081;
+    const SECURITY_EXTENSION_RW: u32 = 0xf080;
+    const SECURITY_EXTENSION_RO: u32 = 0xf081;
     const IS_EXECUTABLE: u32 = 0xf000f;
 
     /// Parse bookmark header
@@ -205,12 +208,14 @@ impl BookmarkData {
             volume_flag: Vec::new(),
             volume_root: false,
             localized_name: String::new(),
-            security_extension: String::new(),
+            security_extension_rw: String::new(),
             username: String::new(),
             uid: 0,
             creation_options: 0,
             folder_index: 0,
             is_executable: false,
+            security_extension_ro: String::new(),
+            file_ref_flag: false,
         };
 
         for record in toc_content_data_record {
@@ -324,6 +329,10 @@ impl BookmarkData {
                     && standard_data.data_type == BookmarkData::BOOL_FALSE
                 {
                     bookmark_data.volume_root = false;
+                } else if standard_data.record_type == BookmarkData::FILE_REF_FLAG
+                    && standard_data.data_type == BookmarkData::BOOL_TRUE
+                {
+                    bookmark_data.file_ref_flag = true;
                 } else if standard_data.record_type == BookmarkData::IS_EXECUTABLE
                     && standard_data.data_type == BookmarkData::BOOL_TRUE
                 {
@@ -340,13 +349,21 @@ impl BookmarkData {
                         Ok(local_name) => bookmark_data.localized_name = local_name,
                         Err(err) => warn!("Failed to parse Localized Name: {:?}", err),
                     }
-                } else if standard_data.record_type == BookmarkData::SECURITY_EXTENSION
+                } else if standard_data.record_type == BookmarkData::SECURITY_EXTENSION_RW
                     && standard_data.data_type == BookmarkData::DATA_TYPE
                 {
                     let extension_data = BookmarkData::bookmark_data_type_string(&record_data);
                     match extension_data {
-                        Ok(extension) => bookmark_data.security_extension = extension,
-                        Err(err) => warn!("Failed to parse Security Extension: {:?}", err),
+                        Ok(extension) => bookmark_data.security_extension_rw = extension,
+                        Err(err) => warn!("Failed to parse Security Extension RW: {:?}", err),
+                    }
+                } else if standard_data.record_type == BookmarkData::SECURITY_EXTENSION_RO
+                    && standard_data.data_type == BookmarkData::DATA_TYPE
+                {
+                    let extension_data = BookmarkData::bookmark_data_type_string(&record_data);
+                    match extension_data {
+                        Ok(extension) => bookmark_data.security_extension_ro = extension,
+                        Err(err) => warn!("Failed to parse Security Extension RO: {:?}", err),
                     }
                 } else if standard_data.record_type == BookmarkData::CREATOR_USERNAME
                     && standard_data.data_type == BookmarkData::STRING_TYPE
@@ -1049,6 +1066,8 @@ mod tests {
         assert_eq!(bookmark.folder_index, folder_index);
         assert_eq!(bookmark.uid, uid);
         assert_eq!(bookmark.creation_options, creation_options);
-        assert_eq!(bookmark.security_extension, security_extension);
+        assert_eq!(bookmark.security_extension_rw, security_extension);
+        assert_eq!(bookmark.security_extension_ro, security_extension);
+        assert_eq!(bookmark.file_ref_flag, false);
     }
 }
