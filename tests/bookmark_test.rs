@@ -1,15 +1,13 @@
-use std::{fs::File, io::Read, path::PathBuf};
+use std::{fs, path::PathBuf};
 
 #[test]
 // Test bookmark found in Apple LoginItems
 fn test_loginitems_file() {
     let mut test_location = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     test_location.push("tests/test_data/loginitem.bookmark");
-    let mut open_results = File::open(test_location).unwrap();
-    let mut buffer = Vec::new();
-    let bytes_read = open_results.read_to_end(&mut buffer).unwrap();
+    let buffer = fs::read(test_location).unwrap();
 
-    assert_eq!(bytes_read, 756);
+    assert_eq!(buffer.len(), 756);
 
     let bookmark_data = macos_bookmarks::parser::parse_bookmark(&buffer).unwrap();
     let creation = 665473989.0;
@@ -62,11 +60,9 @@ fn test_loginitems_file() {
 fn test_poisonapple() {
     let mut test_location = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     test_location.push("tests/test_data/poisonapple.bookmark");
-    let mut open_results = File::open(test_location).unwrap();
-    let mut buffer = Vec::new();
-    let bytes_read = open_results.read_to_end(&mut buffer).unwrap();
+    let buffer = fs::read(test_location).unwrap();
 
-    assert_eq!(bytes_read, 1020);
+    assert_eq!(buffer.len(), 1020);
 
     let bookmark_data = macos_bookmarks::parser::parse_bookmark(&buffer).unwrap();
     let creation = 678248174.9226916;
@@ -141,11 +137,9 @@ fn test_poisonapple() {
 fn test_security_extension_ro() {
     let mut test_location = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     test_location.push("tests/test_data/systemevents.bookmark");
-    let mut open_results = File::open(test_location).unwrap();
-    let mut buffer = Vec::new();
-    let bytes_read = open_results.read_to_end(&mut buffer).unwrap();
+    let buffer = fs::read(test_location).unwrap();
 
-    assert_eq!(bytes_read, 892);
+    assert_eq!(buffer.len(), 892);
 
     let bookmark_data = macos_bookmarks::parser::parse_bookmark(&buffer).unwrap();
     assert_eq!(bookmark_data.creation, 599558400.0);
@@ -190,11 +184,9 @@ fn test_security_extension_ro() {
 fn test_mac_alias_bookmark() {
     let mut test_location = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     test_location.push("tests/test_data/macAlias.bookmark");
-    let mut open_results = File::open(test_location).unwrap();
-    let mut buffer = Vec::new();
-    let bytes_read = open_results.read_to_end(&mut buffer).unwrap();
+    let buffer = fs::read(test_location).unwrap();
 
-    assert_eq!(bytes_read, 884);
+    assert_eq!(buffer.len(), 884);
     let bookmark_data = macos_bookmarks::parser::parse_bookmark(&buffer).unwrap();
     assert_eq!(bookmark_data.creation, 677959217.851971);
     assert_eq!(
@@ -241,11 +233,9 @@ fn test_mac_alias_bookmark() {
 fn test_safari_downloads_bookmark_file() {
     let mut test_location = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     test_location.push("tests/test_data/downloads.bookmark");
-    let mut open_results = File::open(test_location).unwrap();
-    let mut buffer = Vec::new();
-    let bytes_read = open_results.read_to_end(&mut buffer).unwrap();
+    let buffer = fs::read(test_location).unwrap();
 
-    assert_eq!(bytes_read, 716);
+    assert_eq!(buffer.len(), 716);
 
     let bookmark = macos_bookmarks::parser::parse_bookmark(&buffer).unwrap();
 
@@ -304,15 +294,23 @@ fn test_safari_downloads_bookmark_file() {
 }
 
 #[test]
+fn test_ventura_bookmark() {
+    let mut test_location = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    test_location.push("tests/test_data/ventura.bookmark");
+    let buffer = fs::read(test_location).unwrap();
+
+    let results = macos_bookmarks::parser::parse_bookmark(&buffer).unwrap();
+    assert_eq!(results.volume_size, 122107002880)
+}
+
+#[test]
 #[should_panic(expected = "BadHeader")]
 fn test_bad_sig() {
     let mut test_location = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     test_location.push("tests/test_data/bad_header.bookmark");
-    let mut open_results = File::open(test_location).unwrap();
-    let mut buffer = Vec::new();
-    let bytes_read = open_results.read_to_end(&mut buffer).unwrap();
+    let buffer = fs::read(test_location).unwrap();
 
-    assert_eq!(bytes_read, 756);
+    assert_eq!(buffer.len(), 756);
 
     let _ = macos_bookmarks::parser::parse_bookmark(&buffer).unwrap();
 }
@@ -322,11 +320,9 @@ fn test_bad_sig() {
 fn test_bad_content() {
     let mut test_location = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     test_location.push("tests/test_data/bad_content.bookmark");
-    let mut open_results = File::open(test_location).unwrap();
-    let mut buffer = Vec::new();
-    let bytes_read = open_results.read_to_end(&mut buffer).unwrap();
+    let buffer = fs::read(test_location).unwrap();
 
-    assert_eq!(bytes_read, 377);
+    assert_eq!(buffer.len(), 377);
 
     let _ = macos_bookmarks::parser::parse_bookmark(&buffer).unwrap();
 }
